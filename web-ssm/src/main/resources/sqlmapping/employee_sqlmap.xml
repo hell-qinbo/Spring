@@ -1,0 +1,215 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.qinbo.dao.employee.IEmployee">
+    <resultMap id="employeeResultMap" type="com.qinbo.entity.Employee">
+        <id column="id" property="id" jdbcType="CHAR"/>
+        <result column="createDate" property="createDate" jdbcType="DATE"/>
+        <result column="loginname" property="loginname" jdbcType="VARCHAR"/>
+        <result column="loginpassword" property="loginpassword"
+                jdbcType="VARCHAR"/>
+        <result column="username" property="username" jdbcType="VARCHAR"/>
+        <result column="sex" property="sex" jdbcType="INTEGER"/>
+        <result column="email" property="email" jdbcType="VARCHAR"/>
+        <result column="telphone" property="telphone" jdbcType="VARCHAR"/>
+        <result column="idcaid" property="idcaid" jdbcType="VARCHAR"/>
+        <result column="address" property="address" jdbcType="VARCHAR"/>
+        <result column="state" property="state" jdbcType="INTEGER"/>
+        <result column="photo" property="photo" jdbcType="VARCHAR"/>
+        <result column="role_id" property="role_id" jdbcType="CHAR"/>
+
+        <collection property="roles" ofType="com.qinbo.entity.Role">
+            <id column="r_id" property="id" jdbcType="CHAR"/>
+            <result column="r_createDate" property="createDate" jdbcType="DATE"/>
+            <result column="r_roleName" property="roleName" jdbcType="VARCHAR"/>
+            <result column="r_state" property="state" jdbcType="INTEGER"/>
+        </collection>
+    </resultMap>
+
+    <sql id="allColumns">
+        id,createDate,loginname,loginpassword,username,sex,email,telphone,idcaid,address,state,photo,role_id
+    </sql>
+    <!--单条插入-->
+    <insert id="insert" parameterType="java.util.Map">
+        <selectKey keyProperty="id" resultType="java.lang.String" order="BEFORE">
+            SELECT uuid()
+        </selectKey>
+        insert into org_employee (id,createDate,loginname,
+        loginpassword, username, sex,
+        email, telphone, idcaid,
+        address, state,
+        photo,role_id) VALUES (#{id},now(),
+        <if test='loginname!=null and loginname!=""'>
+            #{loginname},
+        </if>
+        <if test='loginpassword!=null and loginpassword!=""'>
+            #{loginpassword},
+        </if>
+        <if test='username!=null and username!=""'>
+            #{username},
+        </if>
+        <if test='sex!=null and sex!=""'>
+            #{sex},
+        </if>
+        <if test='email!=null and email!=""'>
+            #{email},
+        </if>
+        <if test='telphone!=null and telphone!=""'>
+            #{telphone},
+        </if>
+        <if test='idcaid!=null and idcaid!=""'>
+            #{idcaid},
+        </if>
+        <if test='address!=null and address!=""'>
+            #{address},
+        </if>
+        <if test='state!=null and state!=""'>
+            #{state},
+        </if>
+        <if test='photo!=null and photo!=""'>
+            #{photo},
+        </if>
+        <if test='role_id!=null and role_id!=""'>
+            #{role_id}
+        </if>
+        )
+    </insert>
+    <!--根据id删除（single）-->
+    <delete id="deleteById" parameterType="java.lang.Object">
+        UPDATE org_employee SET state=-1 WHERE id=#{id} AND state!=-1
+    </delete>
+    <!--根据id删除（batch）-->
+    <delete id="deleteByIds" parameterType="java.util.List">
+        UPDATE org_employee SET state=-1 WHERE state!=-1 AND id in
+        <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </delete>
+
+    <!--根据id改-->
+    <update id="updateById" parameterType="java.util.Map">
+        UPDATE org_employee
+        <set>
+            <if test='loginname!=null and loginname!=""'>
+                loginname=#{loginname},
+            </if>
+            <if test='loginpassword!=null and loginpassword!=""'>
+                loginpassword=#{loginpassword},
+            </if>
+            <if test='username!=null and username!=""'>
+                username= #{username},
+            </if>
+            <if test='sex!=null and sex!=""'>
+                sex= #{sex},
+            </if>
+            <if test='email!=null and email!=""'>
+                email= #{email},
+            </if>
+            <if test='telphone!=null and telphone!=""'>
+                telphone= #{telphone},
+            </if>
+            <if test='idcaid!=null and idcaid!=""'>
+                idcaid= #{idcaid},
+            </if>
+            <if test='address!=null and address!=""'>
+                address= #{address},
+            </if>
+            <if test='state!=null and state!=""'>
+                state= #{state},
+            </if>
+            <if test='photo!=null and photo!=""'>
+                photo= #{photo},
+            </if>
+            <if test='role_id!=null and role_id!=""'>
+                role_id=#{role_id}
+            </if>
+        </set>
+        WHERE id=#{id} AND state!=-1
+    </update>
+
+    <!--根据ids改-->
+    <update id="updateByIds" parameterType="java.util.Map">
+        UPDATE org_employee
+        <set>
+            <if test='loginname!=null and loginname!=""'>
+                loginname=#{loginname},
+            </if>
+            <if test='loginpassword!=null and loginpassword!=""'>
+                loginpassword=#{loginpassword},
+            </if>
+            <if test='username!=null and username!=""'>
+                username= #{username},
+            </if>
+            <if test='sex!=null and sex!=""'>
+                sex= #{sex},
+            </if>
+            <if test='email!=null and email!=""'>
+                email= #{email},
+            </if>
+            <if test='telphone!=null and telphone!=""'>
+                telphone= #{telphone},
+            </if>
+            <if test='idcaid!=null and idcaid!=""'>
+                idcaid= #{idcaid},
+            </if>
+            <if test='address!=null and address!=""'>
+                address= #{address},
+            </if>
+            <if test='state!=null and state!=""'>
+                state= #{state},
+            </if>
+            <if test='photo!=null and photo!=""'>
+                photo= #{photo},
+            </if>
+            <if test='role_id!=null and role_id!=""'>
+                role_id=#{role_id}
+            </if>
+        </set>
+        WHERE state!=-1 AND id IN
+        <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </update>
+
+    <!--根据id查询-->
+    <select id="selectById" resultMap="employeeResultMap" parameterType="java.lang.Object">
+        SELECT org_employee.*,org_role.*
+        FROM org_employee LEFT JOIN org_role ON org_role.id=org_employee.role_id
+        WHERE org_employee.id=#{id} AND org_employee.state!=-1
+    </select>
+
+    <!--根据ids查询-->
+    <select id="selectByIds" resultType="employeeResultMap" parameterType="java.util.List">
+        SELECT org_employee.*,org_role.*
+        FROM org_employee LEFT JOIN org_role ON org_role.id=org_employee.role_id
+        WHERE org_employee.state!=-1 AND org_employee.id IN
+        <foreach collection="list" index="index" item="item" open="(" separator="," close=")">
+            #{item}
+        </foreach>
+    </select>
+
+    <!--根据条件查询-->
+    <select id="selectByCon" resultMap="employeeResultMap" parameterType="java.util.Map">
+
+        SELECT org_employee.id,org_employee.createDate,org_employee.loginname,org_employee.loginpassword,org_employee.username,org_employee.sex,org_employee.email,
+
+        org_employee.telphone,org_employee.idcaid,org_employee.address,org_employee.state,org_employee.photo,org_employee.role_id,
+
+        org_role.id AS r_id,org_role.createDate AS r_createDate,org_role.roleName AS r_roleName,org_role.state AS r_state
+
+        FROM org_employee LEFT JOIN org_role ON org_role.id=org_employee.role_id
+
+        <where>
+            <if test="username !=null">
+                and org_employee.username like concat('%',#{username},'%')
+            </if>
+            <if test="telphone!=null ">
+                and org_employee.telphone LIKE concat('%',#{telphone},'%')
+            </if>
+            <if test="address!=null">
+                and org_employee.address like concat('%',#{address},'%')
+            </if>
+            AND org_employee.state!=-1
+        </where>
+    </select>
+
+</mapper>

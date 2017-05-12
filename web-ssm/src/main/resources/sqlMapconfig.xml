@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN" "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <!-- <settings useStatementNamespaces="true"/> -->
+    <settings>
+        <!-- 打印查询语句 -->
+        <setting name="logImpl" value="STDOUT_LOGGING"/>
+    </settings>
+    <typeAliases>
+        <typeAlias type="com.qinbo.entity.Employee" alias="Employee"/>
+        <typeAlias type="com.qinbo.entity.Role" alias="Role"/>
+    </typeAliases>
+    <mappers>
+        <mapper resource="./sqlmapping/employee_sqlmap.xml"/>
+        <mapper resource="./sqlmapping/role_sqlmap.xml"/>
+    </mappers>
+</configuration>

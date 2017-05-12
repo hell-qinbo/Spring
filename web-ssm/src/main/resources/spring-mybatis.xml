@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+                        http://www.springframework.org/schema/beans/spring-beans-3.1.xsd
+                        http://www.springframework.org/schema/context
+                        http://www.springframework.org/schema/context/spring-context-3.1.xsd
+                        http://www.springframework.org/schema/tx
+                        http://www.springframework.org/schema/tx/spring-tx.xsd http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <!-- 自动扫描 -->
+    <context:component-scan base-package="com.qinbo"/>
+    <!--开启注解方式-->
+    <context:annotation-config/>
+    <!-- 第一种方式：加载一个properties文件 -->
+    <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        <property name="location" value="classpath:jdbc.properties"/>
+    </bean>
+
+
+    <!-- 配置数据源 -->
+    <bean id="dataSource" class="org.apache.commons.dbcp.BasicDataSource"
+          destroy-method="close">
+        <property name="driverClassName" value="${driverClasss}"/>
+        <property name="url" value="${jdbcUrl}"/>
+        <property name="username" value="${username}"/>
+        <property name="password" value="${password}"/>
+        <!-- 初始化连接大小 -->
+        <property name="initialSize" value="${initialSize}"></property>
+        <!-- 连接池最大数量 -->
+        <property name="maxActive" value="${maxActive}"></property>
+        <!-- 连接池最大空闲 -->
+        <property name="maxIdle" value="${maxIdle}"></property>
+        <!-- 连接池最小空闲 -->
+        <property name="minIdle" value="${minIdle}"></property>
+        <!-- 获取连接最大等待时间 -->
+        <property name="maxWait" value="${maxWait}"></property>
+    </bean>
+
+    <!-- mybatis和spring完美整合，不需要mybatis的配置映射文件 -->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource"/>
+        <property name="configLocation" value="classpath:/sqlMapconfig.xml"/>
+        <!--<property name="mapperLocations" value="classpath:com/qinbo/sqlmapping/**/*.xml" />-->
+    </bean>
+    <!--注入SqlSessionTemplate-->
+    <bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+        <constructor-arg index="0" ref="sqlSessionFactory"/>
+    </bean>
+
+    <!-- DAO接口所在包名，Spring会自动查找其下的类 ,包下的类需要使用@MapperScan注解,否则容器注入会失败 -->
+    <!-- <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+         <property name="basePackage" value="com.qinbo.*" />
+         <property name="sqlSessionFactoryBeanName" value="sqlSessionFactory" />
+     </bean>-->
+
+
+    <bean id="atomikosTransactionManager" class="com.atomikos.icatch.jta.UserTransactionManager"
+          init-method="init" destroy-method="close">
+        <property name="forceShutdown">
+            <value>true</value>
+        </property>
+    </bean>
+
+    <bean id="atomikosUserTransaction" class="com.atomikos.icatch.jta.UserTransactionImp">
+        <property name="transactionTimeout" value="300"/>
+    </bean>
+
+    <bean id="springTransactionManager"
+          class="org.springframework.transaction.jta.JtaTransactionManager">
+        <property name="transactionManager">
+            <ref bean="atomikosTransactionManager"/>
+        </property>
+        <property name="userTransaction">
+            <ref bean="atomikosUserTransaction"/>
+        </property>
+        <property name="allowCustomIsolationLevels" value="true"/>
+    </bean>
+
+
+    <!--注解式事务支持 -->
+    <tx:annotation-driven transaction-manager="springTransactionManager" order="5"/>
+
+    <aop:aspectj-autoproxy proxy-target-class="true"/>
+
+    <!-- 系统日志切面 -->
+    <bean id="logAspect" class="com.qinbo.aspect.LogAspect"/>
+
+    <aop:config proxy-target-class="true">
+        <aop:pointcut id="point1" expression="execution(* com.qinbo.service..*(..))"/>
+        <!--<aop:pointcut id="point2" expression="execution(public * com.htkj.cc.api..*(..))"/>-->
+        <!--<aop:pointcut id="point3" expression="execution(public * com.htkj.cc.api..*(..))||execution(public * com.htkj.cc.service..*(..))"/>-->
+
+
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="point1" order="6"/>
+        <!--<aop:advisor advice-ref="txAdvice" pointcut-ref="point2" order="6"/>-->
+
+        <aop:aspect ref="logAspect" order="1">
+            <!-- 配置通知,相当于@Before、@After、@AfterReturn、@Around、@AfterThrowing -->
+            <aop:around pointcut-ref="point1" method="aroundDoLog"/>
+            <aop:before pointcut-ref="point1" method="beforeDoLog"/>
+            <aop:after pointcut-ref="point1" method="afterDoLog"/>
+            <aop:after-returning pointcut-ref="point1" method="afterReturnDoLog"/>
+            <aop:after-throwing pointcut-ref="point1" method="afterThrowDoLog" throwing="ex"/>
+        </aop:aspect>
+    </aop:config>
+
+    <tx:advice id="txAdvice" transaction-manager="springTransactionManager">
+        <tx:attributes>
+            <tx:method name="*select*" propagation="REQUIRED" read-only="true"/>
+
+            <tx:method name="*update*" propagation="REQUIRED" rollback-for="Exception"/>
+            <tx:method name="*insert*" propagation="REQUIRED" rollback-for="Exception"/>
+            <tx:method name="*delete*" propagation="REQUIRED" rollback-for="Exception"/>
+            <tx:method name="*" propagation="REQUIRED" rollback-for="Exception"/>
+
+        </tx:attributes>
+    </tx:advice>
+
+
+    <!-- (事务管理)transaction manager, use JtaTransactionManager for global tx -->
+    <!-- <tx:annotation-driven transaction-manager="transactionManager"/>-->
+    <!-- (事务管理)transaction manager, use JtaTransactionManager for global tx -->
+    <!-- <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+         <property name="dataSource" ref="dataSource"/>
+     </bean>-->
+</beans>
